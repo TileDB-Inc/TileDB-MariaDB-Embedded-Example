@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS builder
+FROM ubuntu:20.04
 LABEL maintainer="support@tiledb.io"
 
 ENV AWS_EC2_METADATA_DISABLED=true \
@@ -57,28 +57,15 @@ ARG MYTILE_VERSION="0.7.0"
 
 ARG TILEDB_VERSION="2.2.3"
 
-# add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
-# Set git config so superbuild of tiledb can cherry-pick capnp fix
-RUN groupadd -r mysql && useradd -r -g mysql mysql \
- && git config --global user.email "you@example.com" \
- && git config --global user.name "Your Name"
+RUN git clone https://github.com/TileDB-Inc/TileDB-MariaDB.git -b ${MYTILE_VERSION} MyTile
 
-# Install tiledb using 2.0 release
-# TODO change branch after release cut
-RUN git clone https://github.com/TileDB-Inc/TileDB-MariaDB.git -b master mytile \
- && mkdir build_deps && cd build_deps \
- && git clone https://github.com/TileDB-Inc/TileDB.git -b ${TILEDB_VERSION} && cd TileDB \
+RUN git clone https://github.com/TileDB-Inc/TileDB.git -b ${TILEDB_VERSION} TileDB \
+ && cd TileDB \
  && mkdir -p build && cd build \
  && cmake -DTILEDB_VERBOSE=OFF -DTILEDB_S3=ON -DTILEDB_AZURE=ON -DTILEDB_GCS=ON -DTILEDB_SERIALIZATION=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr .. \
  && make -j$(nproc) \
  && make -C tiledb install \
- && cd /tmp \
- && rm -rf build_deps
-
-RUN cp /tmp/mytile/docker/my.cnf /etc/mysql/my.cnf \
- && cp /tmp/mytile/docker/mytile.cnf /etc/mysql/conf.d/mytile.cnf \
- && cp /tmp/mytile/docker/setup-mariadb.sh /usr/local/bin/setup-mariadb.sh \
- && cp -r /tmp/mytile/mysql-test/mytile/test_data/tiledb_arrays /opt/
+ && cd /tmp
 
 # Install curl after building tiledb
 RUN apt-get update && apt-get install -y \
@@ -88,48 +75,11 @@ RUN apt-get update && apt-get install -y \
 
 RUN wget https://downloads.mariadb.org/interstitial/${MARIADB_VERSION}/source/${MARIADB_VERSION}.tar.gz \
  && tar xf ${MARIADB_VERSION}.tar.gz \
- && mv /tmp/mytile ${MARIADB_VERSION}/storage/mytile \
+ && mv /tmp/MyTile ${MARIADB_VERSION}/storage/mytile \
  && cd ${MARIADB_VERSION} \
  && mkdir builddir \
  && cd builddir \
- && cmake -DCMAKE_INSTALL_PREFIX=/opt/server -DWITH_EMBEDDED_SERVER=OFF -DPLUGIN_INNODB=NO -DPLUGIN_INNOBASE=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_MROONGA=NO -DPLUGIN_SPIDER=NO -DPLUGIN_SPHINX=NO -DPLUGIN_FEDERATED=NO -DPLUGIN_FEDERATEDX=NO -DPLUGIN_CONNECT=NO -DCMAKE_BUILD_TYPE=Release -DPLUGIN_MYTILE=YES .. \
+ && cmake -DCMAKE_INSTALL_PREFIX=/opt/server -DWITH_EMBEDDED_SERVER=ON -DPLUGIN_INNODB=NO -DPLUGIN_INNOBASE=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_MROONGA=NO -DPLUGIN_SPIDER=NO -DPLUGIN_SPHINX=NO -DPLUGIN_FEDERATED=NO -DPLUGIN_FEDERATEDX=NO -DPLUGIN_CONNECT=NO -DPLUGIN_MYTILE=YES -DCMAKE_BUILD_TYPE=Release .. \
  && make -j$(nproc) \
  && make install \
- && cd /tmp \
- && rm -rf ${MARIADB_VERSION} \
- && rm -rf /opt/server/mysql-test/
-
-FROM ubuntu:20.04
-COPY --from=builder /usr/local/bin /usr/local/bin
-COPY --from=builder /usr/bin/killall /usr/bin/killall
-COPY --from=builder /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
-COPY --from=builder /opt/server /opt/server
-COPY --from=builder /opt/tiledb_arrays /opt/tiledb_arrays
-COPY --from=builder /etc /etc
-
-RUN set -ex \
- && sed -ri 's/^user\s/#&/' /etc/mysql/my.cnf /etc/mysql/conf.d/* \
- && rm -rf /var/lib/mysql \
- && mkdir -p /var/lib/mysql /var/run/mysqld \
- && chown -R mysql:mysql /var/lib/mysql /var/run/mysqld \
- && chmod 777 /var/run/mysqld \
- && find /etc/mysql/ -name '*.cnf' -print0 | xargs -0 grep -lZE '^(bind-address|log)' | xargs -rt -0 sed -Ei 's/^(bind-address|log)/#&/' \
- && echo '[mysqld]\nskip-host-cache\nskip-name-resolve' > /etc/mysql/conf.d/docker.cnf
-
-ENV PATH="${PATH}:/opt/server/bin:/opt/server/scripts" \
- MYSQL_ALLOW_EMPTY_PASSWORD=1 \
- MYSQL_DATABASE=test 
-
-RUN mkdir /var/log/mysql \
- && chown -R mysql:mysql /var/lib/mysql \
- && chown -R mysql:mysql /var/log/mysql \
- && chown -R mysql:mysql /opt/server \
- && chmod +x /usr/local/bin/setup-mariadb.sh
-
-USER mysql
-
-RUN /usr/local/bin/setup-mariadb.sh
-VOLUME /var/lib/mysql 
-EXPOSE 3306
-
-CMD ["/opt/server/bin/mariadbd", "--datadir=/var/lib/mysql"]
+ && cd /tmp

@@ -5,11 +5,12 @@ project(Example)
 SET(GCC_EXAMPLE_COMPILE_FLAGS "-Wno-write-strings")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GCC_EXAMPLE_COMPILE_FLAGS}")
 
-set(CMAKE_PREFIX_PATH "/home/ubuntu/mytile_server/")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")    
-find_package(MySQL)
+find_path(MySQL_INCLUDE_PATH NAMES mysql/mysql.h)
+message("MySQL include path " ${MySQL_INCLUDE_PATH})
 
-find_library(MYSQL_EMBEDDED_LIBRARIES NAMES mysqld PATHS ${MYSQL_LIB_PATHS})
+find_library(MySQL_EMBEDDED_LIBRARIES NAMES mysqld)
+message("MySQL embedded library path " ${MySQL_EMBEDDED_LIBRARIES})
 
 add_executable(Example example.cxx)
-target_link_libraries(Example ${MYSQL_EMBEDDED_LIBRARIES})
+target_include_directories(Example PUBLIC ${MySQL_INCLUDE_PATH})
+target_link_libraries(Example ${MySQL_EMBEDDED_LIBRARIES})

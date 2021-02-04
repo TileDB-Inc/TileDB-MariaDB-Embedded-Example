@@ -79,7 +79,21 @@ RUN wget https://downloads.mariadb.org/interstitial/${MARIADB_VERSION}/source/${
  && cd ${MARIADB_VERSION} \
  && mkdir builddir \
  && cd builddir \
- && cmake -DCMAKE_INSTALL_PREFIX=/opt/server -DWITH_EMBEDDED_SERVER=ON -DPLUGIN_INNODB=NO -DPLUGIN_INNOBASE=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_MROONGA=NO -DPLUGIN_SPIDER=NO -DPLUGIN_SPHINX=NO -DPLUGIN_FEDERATED=NO -DPLUGIN_FEDERATEDX=NO -DPLUGIN_CONNECT=NO -DPLUGIN_MYTILE=YES -DCMAKE_BUILD_TYPE=Release .. \
+ && cmake -DCMAKE_INSTALL_PREFIX=/mytile_server -DWITH_EMBEDDED_SERVER=ON -DPLUGIN_INNODB=NO -DPLUGIN_INNOBASE=NO -DPLUGIN_TOKUDB=NO -DPLUGIN_ROCKSDB=NO -DPLUGIN_MROONGA=NO -DPLUGIN_SPIDER=NO -DPLUGIN_SPHINX=NO -DPLUGIN_FEDERATED=NO -DPLUGIN_FEDERATEDX=NO -DPLUGIN_CONNECT=NO -DPLUGIN_MYTILE=YES -DCMAKE_BUILD_TYPE=Release .. \
  && make -j$(nproc) \
  && make install \
  && cd /tmp
+
+WORKDIR /
+RUN mkdir example
+COPY example/CMakeLists.txt example/
+COPY example/example.cxx example/
+
+WORKDIR /example
+RUN mkdir build \
+ && cd build \
+ && cmake -DCMAKE_PREFIX_PATH=/mytile_server .. \
+ && make
+
+RUN mkdir data
+ENTRYPOINT ["/example/build/Example"]

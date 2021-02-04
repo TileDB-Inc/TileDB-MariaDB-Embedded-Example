@@ -9,5 +9,7 @@ set(CMAKE_PREFIX_PATH "/home/ubuntu/mytile_server/")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")    
 find_package(MySQL)
 
+find_library(MYSQL_EMBEDDED_LIBRARIES NAMES mysqld PATHS ${MYSQL_LIB_PATHS})
+
 add_executable(Example example.cxx)
-target_link_libraries(Example ${MySQL_LIBRARIES})
+target_link_libraries(Example ${MYSQL_EMBEDDED_LIBRARIES})

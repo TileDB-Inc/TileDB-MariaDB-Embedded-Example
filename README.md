@@ -2,9 +2,9 @@
 
 Instructions and examples of using MariaDB Embedded with the MyTile storage engine  
 
-There are two sections to this example project. The first section [docker](#docker) walks you through using the provider dockerfile to build the example project. This follows the same basic steps as the first section but provides an isolated, reproducible environment.
+There are two sections to this example project. The first section [docker](#docker) walks you through using the provided dockerfile to build the example project. This follows the same basic steps as the first section but provides an isolated, reproducible environment.
 
-Tthe second section [MyTile Embedded](#mytile-embedded) walks you through the process of building the example project locally. This assumes you are using an ubuntu linux instance. If you are on OSX or a different linux version your steps for the dependencies will differ.
+The second section [MyTile Embedded](#mytile-embedded) walks you through the process of building the example project locally. This assumes you are using an ubuntu linux instance. If you are on OSX or a different linux version your steps for the dependencies will differ.
 
 
 ## Docker
@@ -123,4 +123,4 @@ If using this method, be sure to pass the base MyTile installation path to cmake
 cmake -DCMAKE_PREFIX_PATH=/mytile-install-dir ..
 ```
 
-The project should build and link successfully. To see a full example, look at the `Dockerfile` and accompanying `example.cxx` program in the `docker` directory of this repository and the next section.   
+The project should build and link successfully. To see a full example, look at the `Dockerfile` and accompanying `example.cxx` program in the `docker` directory of this repository and the [previous section](#docker).   

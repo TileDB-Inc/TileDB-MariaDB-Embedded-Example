@@ -43,7 +43,7 @@ Accordingly, be sure your application contains the following include directive:
 #include <mysql/mysql.h>
 ```  
 
-There are a few ways to accomplish instruct the compiler to use the correct pathing. One is to set the environment variables `CPATH` and `LIBRARY_PATH` accordingly. These can also be specified inline to the GCC compiler with the `-I` and `-L` options. If using one of these methods, be sure to specify the libary to link with in your GCC command:  
+There are a few ways to instruct the compiler to use the correct pathing. One is to set the environment variables `CPATH` and `LIBRARY_PATH` accordingly. These can also be specified inline to the GCC compiler with the `-I` and `-L` options. If using one of these methods, be sure to specify the libary to link with in your GCC command:   
 ```
 g++ application.cxx -o application -lmysqld
 ```  
@@ -62,7 +62,7 @@ If using this method, be sure to pass the base MyTile installation path to cmake
 cmake -DCMAKE_PREFIX_PATH=/mytile-install-dir ..
 ```  
 
-The project should build and link successfully. To see a full example, look at the `Dockerfile` and accompanying `Example.cxx` program in the `docker` directory of this repository and the next section.  
+The project should build and link successfully. To see a full example, look at the `Dockerfile` and accompanying `example.cxx` program in the `docker` directory of this repository and the next section.  
   
 ## Docker
 In the docker directory you will find a Dockerfile and directory containing an example program (C++). The Dockerfile follows the steps in the above section to build a docker image which runs the example program. The example program loads MyTile Embedded (An Embedded MariaDB instance with the TileDB Storage Engine), creates a table, inserts some data into it, and selects some data from it.  
